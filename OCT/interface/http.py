@@ -1,0 +1,123 @@
+# coding:utf-8
+__author__ = 'angustang'
+'''
+   1. http lib implement the get ,post method of http
+'''
+import urllib2
+import urllib
+import cookielib
+import  json
+import  poster
+from poster.encode import multipart_encode
+from poster.streaminghttp import register_openers
+class MyHttp():
+    def __init__(self,debug=False):
+        opener = poster.streaminghttp.register_openers()
+        opener.add_handler(urllib2.HTTPCookieProcessor(cookielib.CookieJar()))#cookie handler
+        if debug:
+            httpHandler = urllib2.HTTPHandler(debuglevel=1)
+            opener.add_handler(httpHandler)
+        opener.add_handler(urllib2.HTTPHandler())
+        urllib2.install_opener(opener)
+        pass
+    def createRequest(self,url,data=None,method="post",headers=None,postFile=False,postJson=False):
+        '''
+        创建http请求
+        :param url:
+        :param data:
+        :param headers:
+        :param postFile:
+        :param postJson:
+        :return:
+        '''
+        req =None
+        if 'get'==method:
+            req = urllib2.Request(url)
+        elif 'post' == method:
+            if not postFile and not postJson:
+                #如果自定义http头部
+                if headers:
+                    req = urllib2.Request(url,urllib.urlencode(data),headers)
+                else:#不含自定http头部
+                    if  not  data:#posturl 不含传的值
+                        req = urllib2.Request(url)
+                    else:
+                        req = urllib2.Request(url,urllib.urlencode(data))
+            elif postFile and not postJson:
+                if headers:
+                    req = urllib2.Request(url,data,headers)
+                else:
+                    req = urllib2.Request(url,data)
+            elif not postFile and postJson:
+                data = {'data':json.dumps(data)}
+                req = urllib2.Request(url,urllib.urlencode(data))
+        return req
+    def sendReq(self,req):
+        '''
+
+        :param req:
+        :return:
+        '''
+        rsp = urllib2.urlopen(req)
+        return rsp.read()
+
+    def login(self,url,logindata):
+        '''
+        :param url:登录的url
+        :param logindata:登录的字典参数
+        :return:
+        '''
+        assert  type(logindata) == dict,u"登录参数必须是字典"
+        req = urllib2.Request(url,urllib.urlencode(logindata))
+        return  self.sendReq(req)
+
+    def post(self,postUrl,postData,postHeaders=None,postFile=False,postJson=False):
+        req =self.createRequest(url=postUrl,data=postData,headers=postHeaders,postFile=postFile,postJson=postJson)
+        return  self.sendReq(req)
+
+    def get(self,getUrl=None,getData=None,getHeaders=None):
+        req =urllib2.Request(getUrl)
+        return  self.sendReq(req)
+
+    def postFile(self,upFileURL,inputName=None,filepath=None):
+        ''' 上传单个文件
+        '''
+        #待添加文件是否存在的函数验证
+        file_param = poster.encode.MultipartParam.from_file(inputName,filepath)
+        datagen,headers = poster.encode.multipart_encode([file_param])
+        # req = self.createRequest(upFileURL,datagen,method='post',headers=headers,postFile=True)
+        req = self.createRequest(upFileURL,datagen,headers=headers,postFile=True)
+        return  self.sendReq(req)
+    
+    def postFiles(self,upFileURL,inputName=None,filepaths=None):
+        ''' 上传多个文件
+        '''
+        #待添加文件是否存在的函数验证
+        file_params = []
+        for filepath in filepaths:
+            file_params.append(poster.encode.MultipartParam.from_file(inputName,filepath))
+        datagen,headers = poster.encode.multipart_encode(file_params)
+        # req = self.createRequest(upFileURL,datagen,method='post',headers=headers,postFile=True)
+        req = self.createRequest(upFileURL,datagen,headers=headers,postFile=True)
+        return  self.sendReq(req)
+    
+    def getData(self,filepath):
+        '''
+        读取csv文件，然后生成对应的测试用例数据
+        :param filepath:
+        :return:
+        '''
+        testData=[]
+        fobj = open(filepath)
+        paraLines = fobj.readlines()[1:]
+        for eachline in paraLines:
+            linefield =  eachline.split(',')
+            testData.append(linefield)
+        return testData#the format is [[arg1,arg2...,except],[arg1,arg2....,except],[arg1,arg2...except]]
+        fobj.close()
+    def parseRspMsg(self,msg,key=None):
+        print  json.loads(msg)['header']['msg']
+    def logout(self,url,data=None):
+        rsp= self.get(url)
+        return  rsp
+

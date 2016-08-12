@@ -1,0 +1,28 @@
+# coding: cp936
+__author__ = 'angustang'
+import  test.OCTcfg
+URLBASE = test.OCTcfg.URL_PATENT_BASE
+loginUrl = URLBASE + "/index/index"
+logoutUrl = URLBASE + "/index/logout"
+custormUrl=URLBASE+"/customer/index/"
+bailorUrl=URLBASE+"/Customer/bailorIndex/"
+proposerUrl=URLBASE+"/Customer/proposerIndex/"
+contactUrl=URLBASE+"/Customer/contactIndex/"
+inventorUrl=URLBASE+"/Customer/getInventorList"
+contractSubmitUrl = URLBASE+"/Contract/submit/"
+contractSignUrl = URLBASE+"/SignContract/sign/"
+nostandardContractCheck = URLBASE+"/nonstandardcontractcheck/check/"
+agentCheckContractUrl = URLBASE+"/NonstandardContractAgainCheck/check/"
+contractDetailUrl = URLBASE+"/Contract/detail/"
+contractItemDetailUrl = URLBASE+"/contract/itemDetail/"
+jdBookEditUrl = URLBASE+"/clarificaitonbookcheck/edit/"
+jdCheckerCheckUrl = URLBASE+"/clarificaitonbookcheck/check/"
+supportManagerCheckUrl = URLBASE+"/clarificaitonbookcheck/reply/"
+payCaseQueryUrl = URLBASE +"/PayCase/index/?page=1&status=0"
+payFromBanlanceUrl = URLBASE + "/PayCase/PayFromBalance/"
+caseQueryUrl = URLBASE + "/Case/index/"
+submitApplyUrl = URLBASE + "/case/submitApply/"
+registerCaseQueryUrl= URLBASE + "/SubmitCaseCheck/index/?page=1&handleType=1"
+registerCaseCheckUrl = URLBASE + "/SubmitCaseCheck/check/"
+editCustomerUrl = URLBASE+"/case/editCustomer/"
+caseCheckDetail = URLBASE+"/SubmitCaseCheck/detail/"

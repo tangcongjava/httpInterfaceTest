@@ -1,0 +1,104 @@
+# coding:utf-8
+__author__ = 'angustang'
+from  test.testcase.clarification import  ClarificationFlow2
+from  OCT.interface import  http
+from  nose.tools import  *
+import  json
+#之所以这样写的原因是为重新创建一个测试用例
+class testBefore(ClarificationFlow2.testClarificationFlow):
+    pass
+class testCase(object):
+    myhttp = http.MyHttp()
+    @classmethod
+    def setup_class(cls):
+        cls.myhttp.login("http://patent.test.chofn.net/index/index",logindata={
+            "username":"elva",
+            "password":"zz123asd"
+        })
+        pass
+    @classmethod
+    def teardown_class(cls):
+        cls.myhttp.logout("http://patent.test.chofn.net/index/logout")
+        pass
+    def __init__(self):
+        pass
+    def getCaseID(self,rspMsg,contractID):
+        #获取案件ID
+        rspMsg = json.loads(rspMsg)
+        for caseInfo in rspMsg["body"]["data"]["rows"]:
+            if caseInfo["contractId"] == contractID:
+                caseId  = caseInfo["id"]
+            else:
+                continue
+        return  caseId
+    def pay(self,contractId):
+        queryURL = "http://patent.test.chofn.net/PayCase/index/?page=1&status=0"
+        print "*****************************"
+        rspMsg  = self.myhttp.post(queryURL,postData={
+            "ourDocNo":"",
+            "contractCode":"",
+            "bailorName":"",
+            "customerName":"",
+            "title":""
+        },postHeaders={"X-Requested-With":"XMLHttpRequest"})
+        #通过合同ID获取到对应的待付款ID
+        for item in json.loads(rspMsg)["body"]["data"]["rows"]:
+            if item["contractId"] == contractId:
+                itemID = item["id"]
+            else:
+                continue
+        payURL = "http://patent.test.chofn.net/PayCase/PayFromBalance"
+        rspMsg = self.myhttp.post(payURL,{
+            "ids":itemID #这里的IDS不是合同id，而是查询出来的待支付的ID
+        })
+        print '888888888'+'payment msg is ' +rspMsg
+    def testCaseApply(self):
+        #立案申请,使用类继承可以实现测试用例的重复使
+        #1.先查询出业待立案的案子.
+        caseQueryUrl="http://patent.test.chofn.net/Case/index/"
+        print "case msg is "
+        caseMsg = self.myhttp.post(postUrl=caseQueryUrl,postData={
+            "page":1,
+            "handleType":1
+        })
+        print caseMsg
+        caseID = self.getCaseID(caseMsg,ClarificationFlow2.testClarificationFlow.contractId)
+        # print "=====================the contract id is "+self.getCaseID(caseMsg,ClarificationFlow2.testClarificationFlow.contractId)
+        #2 付款
+        self.pay(ClarificationFlow2.testClarificationFlow.contractId)
+        #3.再发起立案申请
+        caseApplyMsg = {
+            "nextHandlerId":962,#下一节点处理人ID
+            "id":caseID,# case id
+            "patentType":1,#专利类型
+            "remark":"",
+            "divideRateData":#
+                {
+                    "hasDivideConsultant": 0,#分成顾问
+                    "divideConsultant": []
+                }
+        }
+        rntmsg = self.myhttp.post("http://patent.test.chofn.net/case/submitApply/",postData=caseApplyMsg)
+        print rntmsg
+        # print "====================="+ClarificationFlow2.testClarificationFlow.clfBookId
+        # print "**********************"+ClarificationFlow2.testClarificationFlow.contractId
+
+# def testpay():
+#     myhttp = http.MyHttp()
+#     myhttp.login("http://patent.test.chofn.net/index/index",{
+#         "username":"elva",
+#         "password":"zz123asd"
+#     })
+#     queryURL = "http://patent.test.chofn.net/PayCase/index/?page=1&status=0"
+#     # rspmsg = myhttp.get("http://patent.test.chofn.net/paycase/index")
+#     # print rspmsg
+#     print "*****************************"
+#     rspMsg  = myhttp.post(queryURL,postData={
+#         "ourDocNo":"",
+#         "contractCode":"",
+#         "bailorName":"",
+#         "customerName":"",
+#         "title":""
+#
+#     },postHeaders={"X-Requested-With":"XMLHttpRequest"})
+#     print rspMsg

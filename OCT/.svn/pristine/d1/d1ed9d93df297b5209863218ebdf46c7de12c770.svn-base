@@ -1,0 +1,20 @@
+# coding:utf-8
+__author__ = 'angustang'
+import  time
+class TimeHandler(object):
+    def __init__(self):
+        pass
+    def getCurrentTime(self):
+        '''
+        生成YYYY-MM-D-m-s的当前时间
+        :return:
+        '''
+        now = time.localtime(time.time())
+        return time.strftime("%Y-%m-%d %H:%M:%S",now)
+        pass
+    def getLogFileName(self):
+        now = time.localtime(time.time())
+        return time.strftime("%Y%m%d")+".log"
+if __name__ == '__main__':
+    timehandler = TimeHandler()
+    print timehandler.getCurrentTime()

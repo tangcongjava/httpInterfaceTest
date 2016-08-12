@@ -1,0 +1,61 @@
+# coding:utf-8
+# __author__ = 'angustang'
+import  MySQLdb
+class sqlCheck(object):
+    def __init__(self,host,user,pswd,dbname,port):
+        try:
+            self.connection = MySQLdb.connect(host=host,
+                                          user=user,
+                                          passwd=pswd,
+                                          db=dbname,
+                                          port=port,
+                                          charset="utf8")
+        except Exception,e:
+            if e.args[0] == 2003:
+                raise  Exception(e.args[1])
+            else:
+                raise  Exception(e.args)
+        self.cursor=self.connection.cursor(cursorclass=MySQLdb.cursors.DictCursor)
+    def getAllRecode(self,sql):
+        '''
+        依据sql语句，返回所有的数据库记录
+        :param sql:
+        :return:
+        '''
+        try:
+            count = self.cursor.execute(sql)
+            if not count:
+                return  None
+            else:
+                row = self.cursor.fetchall()
+                return  row
+        except Exception,e:
+            if e.args[0] == 1146:
+                raise  Exception("table not exist" )
+            self.clear()
+    def getConsulantId(self,ConsulantName):
+        sql = "select id from ps_user as a where a.userName = '%s'" % ConsulantName
+        print sql
+        try:
+            self.cursor.execute(sql)
+            row = self.cursor.fetchall()
+        except Exception,e:
+            print e.args[1]
+            self.clear()
+        return  row[0]["id"]
+    def clear(self):
+        self.cursor.close()
+        self.connection.close()
+if __name__ == '__main__':
+    sql = "select * from ps_contract"
+    # print sqlCheck(host=DBcfg.get("host"),
+    #                user=DBcfg.get("username"),
+    #                pswd=DBcfg.get("password"),
+    #                dbname=DBcfg.get("dbname"),
+    #                port=DBcfg.get("port")).getAllRecode(sql)
+
+    print sqlCheck(host=DBcfg.get("host"),
+                   user=DBcfg.get("username"),
+                   pswd=DBcfg.get("password"),
+                   dbname=DBcfg.get("dbname"),
+                   port=DBcfg.get("port")).getConsulantId("elva")

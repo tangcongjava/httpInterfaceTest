@@ -1,0 +1,32 @@
+#coding=utf-8
+'''合同提交测试用例集'''
+
+from test.OCTcfg import URL_PATENT_BASE,ERROR_PATENT_NOT_LOGIN,consultant
+from OCT.interface.http import MyHttp
+import json,nose
+from OCT.ToolsHub.decorators import getData
+from test.testcase.utils import setup_login, teardown_logout
+from nose.tools import with_setup
+
+__author__="waynel.zhang"
+
+#撤案申请接口链接地址
+url_revoke_apply = URL_PATENT_BASE+"/Contract/submit/"
+
+myhttp = MyHttp()
+
+def submit(customerName,itemTypeAndPropertiesList,myhttp=MyHttp(),publicExpenseTitleCate=1):
+    ''' 提交合同
+    '''
+    requestData={}
+    if ajid:
+        requestData["id"] = ajid
+    if nextHandlerId:
+        requestData["nextHandlerId"] = nextHandlerId
+    if feeCate:
+        requestData["feeCate"] = feeCate
+    if fee:
+        requestData["fee"] = fee
+    if suppleAttachment:
+        requestData["suppleAttachment"] = suppleAttachment
+    return myhttp.post(url_revoke_apply, requestData)

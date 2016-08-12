@@ -1,0 +1,31 @@
+# coding:utf-8
+# __author__ = 'angustang'
+import  MySQLdb
+class CRMPepole(object):
+    '''
+    委托人就是申请人
+    '''
+    def __init__(self,host,port,username,password):
+        self.conn = MySQLdb.connect(host=host,port=port,username=username,password=password)
+        pass
+    def getProposerInfo(self):
+        '''
+        获取申请人信息
+        :return:
+        '''
+        pass
+    def getInventorInfo(self):
+        '''
+        获取发明人信息
+        :return:
+        '''
+        pass
+    def getContactInfo(self):
+        '''
+        获取联系人信息
+        :return:
+        '''
+    def closeConn(self):
+        self.conn.close()
+        pass
+    pass

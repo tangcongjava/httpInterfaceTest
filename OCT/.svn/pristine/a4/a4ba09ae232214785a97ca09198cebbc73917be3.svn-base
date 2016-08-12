@@ -1,0 +1,28 @@
+# coding:utf-8
+__author__ = 'angustang'
+import  logging
+import  time
+from  GenDatetime import  TimeHandler
+from OCT import  OCTcfg
+import  os
+import  sys
+class MyLogging(object):
+    def __init__(self,path):
+
+        logfilename =  TimeHandler().getLogFileName()
+        logfilePath =  os.path.dirname(__file__)+"/log"
+        if not  os.path.exists(logfilePath):
+            os.mkdir(logfilePath)
+        logging.basicConfig(level=logging.DEBUG,
+                            format=('%(asctime)s-------%(message)s'),
+                            datefmt='%Y-%m-%d %H:%M:%S',
+                            filename=os.path.join(logfilePath,logfilename),
+                            filemode='a')
+    def debug(self,msg):
+        if OCTcfg.isLoggingOpen:
+            logging.debug(msg)
+        else:
+            pass
+
+if __name__ == '__main__':
+    MyLogging(__file__)

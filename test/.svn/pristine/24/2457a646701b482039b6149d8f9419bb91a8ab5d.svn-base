@@ -1,0 +1,247 @@
+# coding:utf-8
+__author__ = 'angustang'
+from test.ToolsHub import  GetUserInfo
+from OCT.interface import  http
+from  test.Msg import  GeneratePostMsg
+from  test.Msg import  ClarificationBook
+from  test.Msg import  submitContract
+from  test.Msg import   SignContract
+from  test.Msg import  BaseMsg
+from  test.Msg import  nonStandardContrackCheck
+import json
+from  test.Msg import  SignContract
+import  nose,time
+from  nose.tools import  *
+#合同流程的接口测试
+class TestContractFlow(object):
+    contractId =0
+    myhttp = http.MyHttp()
+    crm = GetUserInfo.CRMPepole(custormUrl="http://patent.test.chofn.net/customer/index/",
+                            BailorUrl="http://patent.test.chofn.net/Customer/bailorIndex/",
+                            ProposerUrl="http://patent.test.chofn.net/Customer/proposerIndex/",
+                            ContactUrl="http://patent.test.chofn.net/Customer/contactIndex/",
+                            InventorUrl="http://patent.test.chofn.net/Customer/getInventorList",
+                            httpHandler=myhttp)
+
+    @classmethod
+    def setup_class(cls):
+        #登录并获取客户的信息
+        cls.crm.myhttp.login("http://patent.test.chofn.net/index/index/",{"username":"elva","password":"zz123asd"})
+        customerInfo = cls.crm.getCustormInfo(postdata={
+            "page":1,
+            "pageSize":15
+        })
+        BailorInfo = cls.crm.getBailorInfo(postData={
+            "customerId":1383188
+        })
+        ProposerInfo = ProposerInfo = cls.crm.getProposerInfo(postData={
+            "customerId":1383188})
+        ContactInfo = ContactInfo = cls.crm.getContactInfo(postData={
+            "customerId":1383188
+        })
+        InventorInfo = cls.crm.getInventorInfo(postData={
+            "customerId":1383188
+        })
+        genData = GeneratePostMsg.GenData(submitContract.submitContractMsg,BaseMsg.itemsAndFee)
+        cls.returndata = genData.genJsonData(bizType=0,customerInfo=customerInfo,bailorInfo=BailorInfo,
+                                     poroposerInfo=ProposerInfo,contactInfo=ContactInfo,
+                                     inventorInfo=InventorInfo)#直接传入一个大的客户信息字典
+        # msg = cls.myhttp.post("http://patent.test.chofn.net/Contract/submit",cls.returndata,
+        #                      {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},postFile=False,postJson=True)
+        # TestContractFlow.contractId = json.loads(msg)["body"]["data"]["contractId"]
+
+        pass
+    @classmethod
+    def teardown_class(cls):
+        # logout
+        cls.myhttp.logout("http://patent.test.chofn.net/index/logout/")
+        pass
+    def test_A_ContractSubmit(self):
+        #提交合同
+        print 'begin to submit contract'
+
+        msg = self.myhttp.post("http://patent.test.chofn.net/Contract/submit",self.returndata,
+                             {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},postFile=False,postJson=True)
+        print  msg
+        TestContractFlow.contractId = json.loads(msg)["body"]["data"]["contractId"]
+        print TestContractFlow.contractId
+    def test_B_ContractSign(self):
+        #签订标准合同
+        print '='*30
+        print '\n'
+        print self.contractId
+
+        genData = GeneratePostMsg.GenData(SignContract.SignStandardContractMsg)
+        contractSignMsg = genData.genJsonData(1,customerInfo=None,bailorInfo=None,poroposerInfo=None,contactInfo=None,inventorInfo=None,
+                            contractSignMsg={"contractId":TestContractFlow.contractId,
+                                             "nextHandlerId":"2549"})
+        rspmsg = self.myhttp.post("http://patent.test.chofn.net/SignContract/sign/",postData=contractSignMsg,postJson=True)
+        pass
+
+
+class TestContractCheckByManager(object):
+
+    '''
+      非标合同省级经理审核通过
+    '''
+    contractId=0
+    myhttp = http.MyHttp()
+    crm = GetUserInfo.CRMPepole(custormUrl="http://patent.test.chofn.net/customer/index/",
+                            BailorUrl="http://patent.test.chofn.net/Customer/bailorIndex/",
+                            ProposerUrl="http://patent.test.chofn.net/Customer/proposerIndex/",
+                            ContactUrl="http://patent.test.chofn.net/Customer/contactIndex/",
+                            InventorUrl="http://patent.test.chofn.net/Customer/getInventorList",
+                            httpHandler=myhttp)
+    @classmethod
+    def setup_class(cls):
+        #  获到客户信息,修改创建合同的消息
+        cls.crm.myhttp.login("http://patent.test.chofn.net/index/index/",{"username":"elva","password":"zz123asd"})
+        customerInfo = cls.crm.getCustormInfo(postdata={
+            "page":1,
+            "pageSize":15
+        })
+        BailorInfo = cls.crm.getBailorInfo(postData={
+            "customerId":1383188
+        })
+        ProposerInfo = ProposerInfo = cls.crm.getProposerInfo(postData={
+            "customerId":1383188})
+        ContactInfo = ContactInfo = cls.crm.getContactInfo(postData={
+            "customerId":1383188
+        })
+        InventorInfo = cls.crm.getInventorInfo(postData={
+            "customerId":1383188
+        })
+        genData = GeneratePostMsg.GenData(submitContract.submitContractMsg,BaseMsg.itemsAndFee)
+        cls.returndata = genData.genJsonData(bizType=0,customerInfo=customerInfo,bailorInfo=BailorInfo,
+                                     poroposerInfo=ProposerInfo,contactInfo=ContactInfo,
+                                     inventorInfo=InventorInfo)
+        pass
+    @classmethod
+    def teardown_class(cls):
+        '''
+            the function of teardown
+        :return:
+        '''
+        cls.myhttp.logout("http://patent.test.chofn.net/index/logout/")
+        pass
+    def test_a_ContractSubmit(self):
+        #提交合同
+        rspMsg = self.myhttp.post("http://patent.test.chofn.net/Contract/submit/",self.returndata,postJson=True)
+        TestContractCheckByManager.contractId= json.loads(rspMsg)["body"]["data"]["contractId"]
+        pass
+    def test_b_NoStandarContractSign(self):
+        #提交非标准合同
+        nonStandardContrackSignMsg={
+                "id":TestContractCheckByManager.contractId,
+                "contractId":TestContractCheckByManager.contractId,
+                "nextHandlerId":"2549"#省级经理审核节点
+        }
+        dataGener = GeneratePostMsg.GenData(SignContract.SignNonStandardContractMsg)
+        postMsg = dataGener.genJsonData(bizType=2,
+                                        contractSignMsg=nonStandardContrackSignMsg,customerInfo=None,inventorInfo=None,
+                                        bailorInfo=None,poroposerInfo=None,contactInfo=None)
+        rspMsg = self.myhttp.post("http://patent.test.chofn.net/SignContract/sign/",postData=postMsg,postJson=True)
+        print rspMsg
+        pass
+    def test_c_contractCheckManager(self):
+        #切换成省级经理登录，然后进行审核
+        self.myhttp.logout("http://patent.test.chofn.net/index/logout/")
+        self.myhttp.login("http://patent.test.chofn.net/index/index/",{
+            "username":"belly",
+            "password":"zz123asd"
+        })
+        managerCheckMsg={
+            "contractId":TestContractCheckByManager.contractId,
+        }
+        dataGener = GeneratePostMsg.GenData(nonStandardContrackCheck.nonStandardCheckByManagerMsg)
+        postMsg = dataGener.genJsonData(bizType=3,ManagerCheckMsg=managerCheckMsg,
+                                        customerInfo=None,bailorInfo=None,inventorInfo=None,
+                                        contactInfo=None,poroposerInfo=None)
+        rspmsg = self.myhttp.post("http://patent.test.chofn.net/nonstandardcontractcheck/check/",postData=postMsg,
+                         postJson=True)
+        print rspmsg
+        pass
+    def test_d_contractSign(self):
+        #省经理审核后，进行合同签订
+        self.myhttp.logout("http://patent.test.chofn.net/index/logout/")
+        self.myhttp.login("http://patent.test.chofn.net/index/index",{
+            "username":"elva",
+            "password":"zz123asd"
+        })
+        finalNoStandardCheckMsg={
+            "contractId":self.contractId,
+        }
+        dataGener = GeneratePostMsg.GenData(SignContract.FinalNoStandarCheckMsg)
+        postMsg = dataGener.genJsonData(bizType=5,customerInfo=None,poroposerInfo=None,
+                                        contactInfo=None,inventorInfo=None,bailorInfo=None,
+                                        FinalNoStandardCheckMsg=finalNoStandardCheckMsg)
+        rspmsg = self.myhttp.post("http://patent.test.chofn.net/SignContract/sign/",postData=postMsg,postJson=True)
+        print  rspmsg
+        pass
+
+
+class TestContractCheckByAgent(object):
+
+    '''
+      非标合同代理中心审核通过
+    '''
+    contractId=0
+    myhttp = http.MyHttp()
+    crm = GetUserInfo.CRMPepole(custormUrl="http://patent.test.chofn.net/customer/index/",
+                            BailorUrl="http://patent.test.chofn.net/Customer/bailorIndex/",
+                            ProposerUrl="http://patent.test.chofn.net/Customer/proposerIndex/",
+                            ContactUrl="http://patent.test.chofn.net/Customer/contactIndex/",
+                            InventorUrl="http://patent.test.chofn.net/Customer/getInventorList",
+                            httpHandler=myhttp)
+    @classmethod
+    def setup_class(cls):
+        # function login
+        # 以后把URL写到配置文件，然后在setup中获取
+        cls.crm.myhttp.login("http://patent.test.chofn.net/index/index/",{"username":"elva","password":"zz123asd"})
+        customerInfo = cls.crm.getCustormInfo(postdata={
+            "page":1,
+            "pageSize":15
+        })
+        BailorInfo = cls.crm.getBailorInfo(postData={
+            "customerId":1383188
+        })
+        ProposerInfo = ProposerInfo = cls.crm.getProposerInfo(postData={
+            "customerId":1383188})
+        ContactInfo = ContactInfo = cls.crm.getContactInfo(postData={
+            "customerId":1383188
+        })
+        InventorInfo = cls.crm.getInventorInfo(postData={
+            "customerId":1383188
+        })
+        genData = GeneratePostMsg.GenData(submitContract.submitContractMsg,BaseMsg.itemsAndFee)
+        cls.returndata = genData.genJsonData(bizType=0,customerInfo=customerInfo,bailorInfo=BailorInfo,
+                                     poroposerInfo=ProposerInfo,contactInfo=ContactInfo,
+                                     inventorInfo=InventorInfo)
+        pass
+    @classmethod
+    def teardown_class(cls):
+        '''
+            the function of teardown
+        :return:
+        '''
+        cls.myhttp.logout("http://patent.test.chofn.net/index/logout/")
+        pass
+    def test_a_ContractSubmit(self):
+        #提交合同
+        pass
+    def test_b_SubmitNoStandarContract(self):
+        pass
+    def test_c_contractCheckManager(self):
+        #省级经理审核
+        pass
+    def test_d_contractCheckAgent(self):
+        #代理中心审核
+        pass
+    def test_e_contractSign(self):
+        #签订合同
+        pass
+
+if __name__ == '__main__':
+    nosearg=['foo','ContractFlow.py:TestContractFlow']
+    nose.run(argv=nosearg)
+    pass
